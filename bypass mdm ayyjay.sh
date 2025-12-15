@@ -25,15 +25,7 @@ select opt in "${options[@]}"; do
                 diskutil rename "Macintosh HD - Data" "Data"
             fi
 
-            # Create Temporary User
-            echo -e "${NC}Create a Temporary User"
-            read -p "Enter Temporary Fullname (Default is 'Apple'): " realName
-            realName="${realName:=Apple}"
-            read -p "Enter Temporary Username (Default is 'Apple'): " username
-            username="${username:=Apple}"
-            read -p "Enter Temporary Password (Default is '1234'): " passw
-            passw="${passw:=1234}"
-
+        
             
             # Block MDM domain
             echo "0.0.0.0 iprofiles.apple.com" >>/Volumes/Macintosh\ HD/etc/hosts
