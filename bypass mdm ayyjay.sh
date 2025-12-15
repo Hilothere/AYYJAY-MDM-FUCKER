@@ -32,7 +32,6 @@ select opt in "${options[@]}"; do
             echo -e "${GRN}Successfully blocked MDM & Profile Domains"
 
             # Remove configuration profiles
-            touch /Volumes/Data/private/var/db/.AppleSetupDone
             rm -rf /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigHasActivationRecord
             rm -rf /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordFound
             touch /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigProfileInstalled
