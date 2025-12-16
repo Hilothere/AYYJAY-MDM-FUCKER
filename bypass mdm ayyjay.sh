@@ -1,79 +1,40 @@
 #!/bin/bash
 
-# Define color codes
-RED='\033[1;31m'
-GRN='\033[1;32m'
-BLU='\033[1;34m'
-YEL='\033[1;33m'
-PUR='\033[1;35m'
-CYAN='\033[1;36m'
-NC='\033[0m'
+# Backup existing hosts file
+sudo cp /etc/hosts /etc/hosts.backup-$(date +%Y%m%d%H%M%S)
 
-# Display header
-echo -e "${CYAN}Bypass MDM By Assaf Dori (assafdori.com)${NC}"
-echo ""
+# List of domains to block
+DOMAINS=(
+"apple.com"
+"icloud.com"
+"cdn-apple.com"
+"appleid.apple.com"
+"mz.apple.com"
+"mosyle.com"
+"mosyle.net"
+"mosyle.io"
+"mosyle.app"
+"mosyle.mdm"
+"m.dmtracking.com"
+"m.mdmtracking.com"
+"iprofile.apple.com"
+"deviceprofile.apple.com"
+"profile.apple.com"
+"config.apple.com"
+"mdm.apple.com"
+)
 
-# Prompt user for choice
-PS3='Please enter your choice: '
-options=("Bypass MDM from Recovery" "Reboot & Exit")
-select opt in "${options[@]}"; do
-    case $opt in
-        "Bypass MDM from Recovery")
-            # Bypass MDM from Recovery
-            echo -e "${YEL}Bypass MDM from Recovery"
-            if [ -d "/Volumes/Macintosh HD - Data" ]; then
-                diskutil rename "Macintosh HD - Data" "Data"
-            fi
-
-        
-            
-            # Block MDM domain
-            echo "0.0.0.0 iprofiles.apple.com" >>/Volumes/Macintosh\ HD/etc/hosts
-            echo -e "${GRN}Successfully blocked MDM & Profile Domains"
-
-            # Remove configuration profiles
-            rm -rf /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigHasActivationRecord
-            rm -rf /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordFound
-            touch /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigProfileInstalled
-            touch /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordNotFound
-
-            echo -e "${GRN}MDM enrollment has been bypassed!${NC}"
-            echo -e "${NC}Exit terminal and reboot your Mac.${NC}"
-            break
-            ;;
-        "Disable Notification (SIP)")
-            # Disable Notification (SIP)
-            echo -e "${RED}Please Insert Your Password To Proceed${NC}"
-            sudo rm /var/db/ConfigurationProfiles/Settings/.cloudConfigHasActivationRecord
-            sudo rm /var/db/ConfigurationProfiles/Settings/.cloudConfigRecordFound
-            sudo touch /var/db/ConfigurationProfiles/Settings/.cloudConfigProfileInstalled
-            sudo touch /var/db/ConfigurationProfiles/Settings/.cloudConfigRecordNotFound
-            break
-            ;;
-        "Disable Notification (Recovery)")
-            # Disable Notification (Recovery)
-            rm -rf /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigHasActivationRecord
-            rm -rf /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordFound
-            touch /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigProfileInstalled
-            touch /Volumes/Macintosh\ HD/var/db/ConfigurationProfiles/Settings/.cloudConfigRecordNotFound
-            break
-            ;;
-        "Check MDM Enrollment")
-            # Check MDM Enrollment
-            echo ""
-            echo -e "${GRN}Check MDM Enrollment. Error is success${NC}"
-            echo ""
-            echo -e "${RED}Please Insert Your Password To Proceed${NC}"
-            echo ""
-            sudo profiles show -type enrollment
-            break
-            ;;
-        "Reboot & Exit")
-            # Reboot & Exit
-            echo "Rebooting..."
-            reboot
-            break
-            ;;
-        *) echo "Invalid option $REPLY" ;;
-    esac
+# Add blocking entries
+for DOMAIN in "${DOMAINS[@]}"; do
+    if ! grep -q "$DOMAIN" /etc/hosts; then
+        echo "0.0.0.0 $DOMAIN" | sudo tee -a /etc/hosts
+        echo "Blocked $DOMAIN"
+    else
+        echo "$DOMAIN is already blocked."
+    fi
 done
+
+# Flush DNS cache to apply changes
+dscacheutil -flushcache; sudo killall -HUP mDNSResponder
+
+echo "All specified domains have been blocked. Please reboot or restart network services if needed."
